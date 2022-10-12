@@ -55,8 +55,11 @@ code: |
 code: |
   al_form_type = "other" 
 ---
+comment: |
+  For Guided Assistants avoid asking for personal information - like user name and role
 objects:
-  - users: ALPeopleList.using(ask_number=True,target_number=1)
+  #  - users: ALPeopleList.using(ask_number=True,target_number=1)
+  - users: ALPeopleList.using(there_are_any=False)
 ---
 sections:
   - review_ChangingForeignCSOrder: Review your answers
@@ -67,17 +70,17 @@ comment: |
 id: interview_order_ChangingForeignCSOrder
 code: |
   # Set the allowed courts for this interview
-  allowed_courts = interview_metadata["ChangingForeignCSOrder"]["allowed courts"]
+  # allowed_courts = interview_metadata["ChangingForeignCSOrder"]["allowed courts"]
   nav.set_section("review_ChangingForeignCSOrder")
   # Below sets the user_role by asking a question.
   # You can set user_role directly instead to either 'plaintiff' or 'defendant'
-  user_ask_role
-  wrong_path_TF
-  out_of_state_cs_issuer
-  looked_for_out_of_state_cs_issuer
-  set_progress(25)
-  stop_now
-  has_jurisdiction
+  # user_ask_role
+  if not wrong_path_TF: 
+    out_of_state_cs_issuer
+    looked_for_out_of_state_cs_issuer
+    set_progress(25)
+    stop_now
+    has_jurisdiction
   number_of_steps
   interview_order_ChangingForeignCSOrder = True
 ---
@@ -87,10 +90,10 @@ comment: |
   Delete mandatory: True to include in another interview
 mandatory: True
 code: |
-  al_intro_screen
+  # al_intro_screen
   ChangingForeignCSOrder_intro
   interview_order_ChangingForeignCSOrder
-  signature_date
+  # signature_date
   # Store anonymous data for analytics / statistics
   store_variables_snapshot(
       persistent=True,
@@ -169,12 +172,15 @@ fields:
   - "May have jurisdiction": may_have_jurisdiction
     datatype: yesno
 ---
-id: Code block that counts steps
-question: |
-  Code block that counts steps
-fields:
-  - "Number of steps": number_of_steps
-    datatype: number
+code: |
+  number_of_steps = 0
+  if wrong_path_TF:
+    number_of_steps = 2
+  else:
+    if out_of_state_cs_issuer == 'agency' or looked_for_out_of_state_cs_issuer == 'agency':
+      number_of_steps += 1
+    if no_jurisdiction or may_have_jurisdiction or has_jurisdiction:
+      number_of_steps += 1
 ---
 id: Actually goes into first screen
 question: |
@@ -268,23 +274,25 @@ subquestion: |
 progress: 100
 ---
 # ALDocument objects specify the metadata for each template
+# AK Guided Assistants do not need post interviwe instructions the Personal Action Plans are the instructions
 objects:
-  - ChangingForeignCSOrder_Post_interview_instructions: ALDocument.using(title="Instructions", filename="ChangingForeignCSOrder_next_steps.docx", enabled=True, has_addendum=False, default_overflow_message=AL_DEFAULT_OVERFLOW_MESSAGE)
+  # - ChangingForeignCSOrder_Post_interview_instructions: ALDocument.using(title="Instructions", filename="ChangingForeignCSOrder_next_steps.docx", enabled=True, has_addendum=False, default_overflow_message=AL_DEFAULT_OVERFLOW_MESSAGE)
   - ChangingForeignCSOrder_attachment: ALDocument.using(title="Draftchangingforeignorder", filename="ChangingForeignCSOrder", enabled=True, has_addendum=False, default_overflow_message=AL_DEFAULT_OVERFLOW_MESSAGE)
 ---
 # Bundles group the ALDocuments into separate downloads, such as for court and for the user
 objects:
-  - al_user_bundle: ALDocumentBundle.using(elements=[ChangingForeignCSOrder_Post_interview_instructions, ChangingForeignCSOrder_attachment], filename="ChangingForeignCSOrder", title="All forms to download for your records", enabled=True)
+  # - al_user_bundle: ALDocumentBundle.using(elements=[ChangingForeignCSOrder_Post_interview_instructions, ChangingForeignCSOrder_attachment], filename="ChangingForeignCSOrder", title="All forms to download for your records", enabled=True)
+  - al_user_bundle: ALDocumentBundle.using(elements=[ChangingForeignCSOrder_attachment], filename="ChangingForeignCSOrder", title="All forms to download for your records", enabled=True)
   - al_court_bundle: ALDocumentBundle.using(elements=[ChangingForeignCSOrder_attachment],  filename="ChangingForeignCSOrder", title="All forms to deliver to court", enabled=True)
 ---
 # Each attachment defines a key in an ALDocument. We use `i` as the placeholder here so the same template is 
 # used for "preview" and "final" keys, and logic in the template checks the value of 
 # `i` to show or hide the user's signature
 attachments:
-  - name: Post-interview-Instructions
-    filename: ChangingForeignCSOrder_next_steps
-    docx template file: ChangingForeignCSOrder_next_steps.docx
-    variable name: ChangingForeignCSOrder_Post_interview_instructions[i]
+  #  - name: Post-interview-Instructions
+  #    filename: ChangingForeignCSOrder_next_steps
+  #    docx template file: ChangingForeignCSOrder_next_steps.docx
+  #    variable name: ChangingForeignCSOrder_Post_interview_instructions[i]
   - name: ChangingForeignCSOrder
     filename: ChangingForeignCSOrder
     variable name: ChangingForeignCSOrder_attachment[i]
