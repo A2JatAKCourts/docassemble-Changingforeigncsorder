@@ -1,0 +1,294 @@
+---
+include:
+  - docassemble.AssemblyLine:assembly_line.yml
+---
+metadata:
+  title: |
+    Draftchangingforeignorder
+  short title: |
+    Change out of State Child Support Order
+  tags:
+    - FA-00-00-00-00
+  authors:
+    - Jeannie Sato
+    - Caroline  Robinson
+---
+mandatory: True
+comment: |
+  Global interview metadata
+variable name: interview_metadata["ChangingForeignCSOrder"]
+data:
+  al_weaver_version: "1.7.0"
+  generated on: "2022-10-12"
+  title: >-
+    Draftchangingforeignorder
+  short title: >-
+    Change out of State Child Support Order
+  description: |-
+    Guide to changing a child support order that neither the Alaska courts nor Child Support Services Division (CSSD) order
+  original_form: >-
+    https://courts.alaska.gov/shc/family/shcmodify.htm#11
+  allowed courts: 
+    - "Superior Court"
+  categories:
+    - "FA-00-00-00-00"
+  typical role: "unknown"
+  generate download screen: True
+---
+code: |
+  interview_metadata['main_interview_key'] =  'ChangingForeignCSOrder'
+---
+code: |
+  # This controls the default country and list of states in address field questions
+  AL_DEFAULT_COUNTRY = "US"
+---
+code: |
+  # This controls the default state in address field questions
+  AL_DEFAULT_STATE = "AK"
+---
+code: |
+  github_repo_name =  'docassemble-Changingforeigncsorder'
+---
+code: |
+  interview_short_title = "How to change your out of state child support order"
+---
+code: |
+  al_form_type = "other" 
+---
+objects:
+  - users: ALPeopleList.using(ask_number=True,target_number=1)
+---
+sections:
+  - review_ChangingForeignCSOrder: Review your answers
+---
+#################### Interview order #####################
+comment: |
+  Controls order and branching logic for questions specific to this form
+id: interview_order_ChangingForeignCSOrder
+code: |
+  # Set the allowed courts for this interview
+  allowed_courts = interview_metadata["ChangingForeignCSOrder"]["allowed courts"]
+  nav.set_section("review_ChangingForeignCSOrder")
+  # Below sets the user_role by asking a question.
+  # You can set user_role directly instead to either 'plaintiff' or 'defendant'
+  user_ask_role
+  wrong_path_TF
+  out_of_state_cs_issuer
+  looked_for_out_of_state_cs_issuer
+  set_progress(25)
+  stop_now
+  has_jurisdiction
+  number_of_steps
+  interview_order_ChangingForeignCSOrder = True
+---
+###################### Main order ######################
+comment: |
+  This block includes the logic for standalone interviews.
+  Delete mandatory: True to include in another interview
+mandatory: True
+code: |
+  al_intro_screen
+  ChangingForeignCSOrder_intro
+  interview_order_ChangingForeignCSOrder
+  signature_date
+  # Store anonymous data for analytics / statistics
+  store_variables_snapshot(
+      persistent=True,
+      data={
+          "zip": showifdef("users[0].address.zip"),
+          "reached_interview_end": True,
+      },
+  )
+  ChangingForeignCSOrder_download
+---
+comment: |
+  This question is used to introduce your interview. Please customize
+id: Draftchangingforeignorder
+continue button field: ChangingForeignCSOrder_intro
+question: |
+  Draftchangingforeignorder
+subquestion: |
+  Start with a copy of your latest or last child support order - the one you want to change.
+---
+id: Who issued your child support order
+question: |
+  Who issued your child support order?
+fields:
+  - "Out of state cs issuer": out_of_state_cs_issuer
+    input type: radio
+    choices:
+      - A court in the other state.
+      - The child support agency in the other state.
+      - I do not know.
+---
+id: Where to look
+question: |
+  Where to look
+subquestion: |
+  At the top:
+  Your child support order should say who issued it at the top. 
+  At the bottom:
+   If it was signed by a judge, it was a court.     Add?
+  Where is the child support order from
+fields:
+  - "Who ordered the child support?": looked_for_out_of_state_cs_issuer
+    input type: radio
+    choices:
+      - A court in the other state.
+      - The child support agency in the other state.
+      - I still do not know.
+---
+id: Stop here or continue
+question: |
+  Stop here or continue?
+subquestion: |
+  Do you want information about 
+  Buttons: 
+  Do you changing an agency order and a court order, or 
+  do you want to stop and figure out who issued your order?
+fields:
+  - "Do you want to stop and get your Action Plan now?": stop_now
+    datatype: yesno
+---
+id: Does the other parent or the child still live in the other state Who still lives in the other state
+question: |
+  Does the other parent or the child still live in the other state? Who still lives in the other state?
+subquestion: |
+  Who still lives in the other state? out_of_state_resident 
+  o	My child  out_of_state_resident=’child’
+  o	The other parent out_of_state_resident=’parent’
+  o	Both out_of_state_resident=’both’
+  o	No one out_of_state_resident=’none’
+  
+  After Jurisdiction block w radio buttons
+fields:
+  - "Has jurisdiction": has_jurisdiction
+    datatype: yesno
+  - "No jurisdiction": no_jurisdiction
+    datatype: yesno
+  - "May have jurisdiction": may_have_jurisdiction
+    datatype: yesno
+---
+id: Code block that counts steps
+question: |
+  Code block that counts steps
+fields:
+  - "Number of steps": number_of_steps
+    datatype: number
+---
+id: Actually goes into first screen
+question: |
+  Actually goes into first screen
+subquestion: |
+  Don't want this interview...
+fields:
+  - "Wrong path tf": wrong_path_TF
+    datatype: yesno
+---
+id: preview ChangingForeignCSOrder
+question: |
+  Preview your form before you sign it
+subquestion: |
+  Here is a preview of the form you will sign on the next page.   
+  
+  ${ al_court_bundle.as_pdf(key='preview') }
+
+  Click the image to open it in a new tab. Click the "Edit answers" button
+  to edit your answers.
+
+  ${ action_button_html(url_action('review_ChangingForeignCSOrder'), label='Edit answers', color='info') }
+  
+  Remember to come back to this window to continue and sign your form.
+continue button field: ChangingForeignCSOrder_preview_question    
+---
+code: |
+  signature_fields = []
+---
+code: |
+  # This is a placeholder for the addresses that will be searched
+  # for matching address to court. Edit if court venue is based on 
+  # a different address than the user's
+  addresses_to_search = [user.address for user in users]
+---
+id: ChangingForeignCSOrder review screen
+event: review_ChangingForeignCSOrder
+question: |
+  Review your answers
+review:
+  - Edit: out_of_state_cs_issuer
+    button: |
+      **Out of state cs issuer**:
+      ${ out_of_state_cs_issuer }
+  - Edit: number_of_steps
+    button: |
+      **Number of steps**:
+      ${ number_of_steps }
+  - Edit: wrong_path_TF
+    button: |
+      **Wrong path tf**:
+      ${ word(yesno(wrong_path_TF)) }
+  - Edit: has_jurisdiction
+    button: |
+      **Has jurisdiction**:
+      ${ word(yesno(has_jurisdiction)) }
+  - Edit: no_jurisdiction
+    button: |
+      **No jurisdiction**:
+      ${ word(yesno(no_jurisdiction)) }
+  - Edit: may_have_jurisdiction
+    button: |
+      **May have jurisdiction**:
+      ${ word(yesno(may_have_jurisdiction)) }
+  - Edit: looked_for_out_of_state_cs_issuer
+    button: |
+      **Who ordered the child support?**:
+      ${ looked_for_out_of_state_cs_issuer }
+  - Edit: stop_now
+    button: |
+      **Do you want to stop and get your Action Plan now?**:
+      ${ word(yesno(stop_now)) }
+---
+id: download ChangingForeignCSOrder
+event: ChangingForeignCSOrder_download
+question: |
+  All done
+subquestion: |
+  Thank you ${users}. Your form is ready to download and deliver.
+  
+  View, download and send your form below. Click the "Edit answers" button to fix any mistakes.
+
+  ${ action_button_html(url_action('review_ChangingForeignCSOrder'), label='Edit answers', color='info') }
+  
+  
+  ${ al_user_bundle.download_list_html() }
+  
+
+  ${ al_user_bundle.send_button_html(show_editable_checkbox=True) }
+
+progress: 100
+---
+# ALDocument objects specify the metadata for each template
+objects:
+  - ChangingForeignCSOrder_Post_interview_instructions: ALDocument.using(title="Instructions", filename="ChangingForeignCSOrder_next_steps.docx", enabled=True, has_addendum=False, default_overflow_message=AL_DEFAULT_OVERFLOW_MESSAGE)
+  - ChangingForeignCSOrder_attachment: ALDocument.using(title="Draftchangingforeignorder", filename="ChangingForeignCSOrder", enabled=True, has_addendum=False, default_overflow_message=AL_DEFAULT_OVERFLOW_MESSAGE)
+---
+# Bundles group the ALDocuments into separate downloads, such as for court and for the user
+objects:
+  - al_user_bundle: ALDocumentBundle.using(elements=[ChangingForeignCSOrder_Post_interview_instructions, ChangingForeignCSOrder_attachment], filename="ChangingForeignCSOrder", title="All forms to download for your records", enabled=True)
+  - al_court_bundle: ALDocumentBundle.using(elements=[ChangingForeignCSOrder_attachment],  filename="ChangingForeignCSOrder", title="All forms to deliver to court", enabled=True)
+---
+# Each attachment defines a key in an ALDocument. We use `i` as the placeholder here so the same template is 
+# used for "preview" and "final" keys, and logic in the template checks the value of 
+# `i` to show or hide the user's signature
+attachments:
+  - name: Post-interview-Instructions
+    filename: ChangingForeignCSOrder_next_steps
+    docx template file: ChangingForeignCSOrder_next_steps.docx
+    variable name: ChangingForeignCSOrder_Post_interview_instructions[i]
+  - name: ChangingForeignCSOrder
+    filename: ChangingForeignCSOrder
+    variable name: ChangingForeignCSOrder_attachment[i]
+    skip undefined: True
+    docx template file: ChangingForeignCSOrder.docx
+
+
