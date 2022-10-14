@@ -76,12 +76,30 @@ code: |
   # You can set user_role directly instead to either 'plaintiff' or 'defendant'
   # user_ask_role
   if not wrong_path_TF: 
-    out_of_state_cs_issuer
-    looked_for_out_of_state_cs_issuer
+    if out_of_state_cs_issuer == 'court':
+      if agency_collected_court_order:
+        if stop_now  == 'continue':
+          jurisdiction
+          interview_order_ChangingForeignCSOrder = True
+        else: 
+          interview_order_ChangingForeignCSOrder = True
+      else:
+        jurisdiction
+        interview_order_ChangingForeignCSOrder = True
+    elif out_of_state_cs_issuer == 'do not know':
+      if looked_for_out_of_state_cs_issuer == 'court':    
+        if agency_collected_court_order:
+          if stop_now  == 'continue':
+            jurisdiction
+            interview_order_ChangingForeignCSOrder = True
+          else: 
+            interview_order_ChangingForeignCSOrder = True
+        else:
+          jurisdiction
+          interview_order_ChangingForeignCSOrder = True
     set_progress(25)
-    stop_now
-    has_jurisdiction
-  number_of_steps
+    # stop_now
+    # has_jurisdiction
   interview_order_ChangingForeignCSOrder = True
 ---
 ###################### Main order ######################
@@ -93,6 +111,7 @@ code: |
   # al_intro_screen
   ChangingForeignCSOrder_intro
   interview_order_ChangingForeignCSOrder
+  number_of_steps
   # signature_date
   # Store anonymous data for analytics / statistics
   store_variables_snapshot(
@@ -120,9 +139,9 @@ fields:
   - "Out of state cs issuer": out_of_state_cs_issuer
     input type: radio
     choices:
-      - A court in the other state.
-      - The child support agency in the other state.
-      - I do not know.
+      - 'A court in the other state.': court
+      - "The child support agency in the other state.": agency
+      - "I do not know.": not known
 ---
 id: Where to look
 question: |
@@ -137,40 +156,73 @@ fields:
   - "Who ordered the child support?": looked_for_out_of_state_cs_issuer
     input type: radio
     choices:
-      - A court in the other state.
-      - The child support agency in the other state.
-      - I still do not know.
+      - "A court in the other state.": court
+      - "The child support agency in the other state.": agency
+      - "I still do not know.": not known
 ---
 id: Stop here or continue
 question: |
   Stop here or continue?
 subquestion: |
-  Do you want information about 
-  Buttons: 
-  Do you changing an agency order and a court order, or 
-  do you want to stop and figure out who issued your order?
+  What do you want to do? 
 fields:
-  - "Do you want to stop and get your Action Plan now?": stop_now
-    datatype: yesno
+  - "I want to :": stop_or_continue
+    input type: radio
+    choices:
+      - "Learn more about changing an **agency** order and a **court** order": continue
+      - "Stop now and figure out who issued my order.": stop
 ---
-id: Does the other parent or the child still live in the other state Who still lives in the other state
+id: out of state cs agency collect court order
+question: |
+  After you got your court order, did your state child support agency collect child support?
+yesno: agency_collected_court_order
+---
+id: some agences can help
+question: |
+  Some agencies can help, some cannot
+subquestion: |
+  Your Personal Action Plan now has contact information for AK CSSD and links to CS enforcement agencies in other states.
+
+  Not all agencies in all states can help you change your child support order, you may need to ask the court in the other state to change or the court in Alaska.
+fields:
+  - "What do you want to do?": stop_now
+    input type: radio
+    choices:
+      - "Stop and contact cs agencies in AK and other state.": stop
+      - "Get information about asking court to change if the agencies cannot help.": continue
+---
+id: Jurisdiction
 question: |
   Does the other parent or the child still live in the other state? Who still lives in the other state?
 subquestion: |
-  Who still lives in the other state? out_of_state_resident 
-  o	My child  out_of_state_resident=’child’
-  o	The other parent out_of_state_resident=’parent’
-  o	Both out_of_state_resident=’both’
-  o	No one out_of_state_resident=’none’
-  
-  After Jurisdiction block w radio buttons
+  Who still lives in the other state?
 fields:
-  - "Has jurisdiction": has_jurisdiction
-    datatype: yesno
-  - "No jurisdiction": no_jurisdiction
-    datatype: yesno
-  - "May have jurisdiction": may_have_jurisdiction
-    datatype: yesno
+  - "Who still lives out of state?:": out_of_state_resident
+    input type: radio
+    choices: 
+      - "My child": child
+      - "My child's other parent": parent
+      - "My child and their other parent": both
+      - "No one lives out of state.": none
+  - "Has your child lived here in Alaska for at least 6 months?": child_resident
+    input type: radio
+    choices:
+      - Yes
+      - No    
+    js show if:
+       val('out_of_state_resident') == 'parent' || val('out_of_state_resident') == 'none'
+---
+code: |
+  if out_of_state_resident in('parent','none'):
+    if child_resident == 'Yes':
+      has_jurisdiction = True
+      jurisdiction = 'yes'
+    else:
+      may_have_jurisdiction = True
+      jurisdiction = 'maybe'
+  if out_of_state_resident in('child','both'):
+    no_jurisdiction = True
+    jurisdiction = 'no'
 ---
 code: |
   number_of_steps = 0
