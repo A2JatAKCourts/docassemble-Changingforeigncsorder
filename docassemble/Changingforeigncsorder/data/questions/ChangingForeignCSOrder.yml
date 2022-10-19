@@ -193,7 +193,7 @@ fields:
 ---
 id: Jurisdiction
 question: |
-  Does the other parent or the child still live in the other state? Who still lives in the other state?
+  Does the other parent or the child still live in the other state?
 subquestion: |
   Who still lives in the other state?
 fields:
@@ -205,10 +205,7 @@ fields:
       - "My child and their other parent": both
       - "No one lives out of state.": none
   - "Has your child lived here in Alaska for at least 6 months?": child_resident
-    input type: radio
-    choices:
-      - Yes
-      - No    
+    datatype: yesnoradio   
     js show if:
        val('out_of_state_resident') == 'parent' || val('out_of_state_resident') == 'none'
 ---
@@ -219,7 +216,7 @@ code: |
       jurisdiction = 'yes'
     else:
       may_have_jurisdiction = True
-      jurisdiction = 'maybe'
+      jurisdiction = 'null'
   if out_of_state_resident in('child','both'):
     no_jurisdiction = True
     jurisdiction = 'no'
@@ -229,10 +226,13 @@ code: |
   if wrong_path_TF:
     number_of_steps = 2
   else:
-    if out_of_state_cs_issuer == 'agency' or looked_for_out_of_state_cs_issuer == 'agency':
+    if out_of_state_cs_issuer == 'agency':
       number_of_steps += 1
-    if no_jurisdiction or may_have_jurisdiction or has_jurisdiction:
-      number_of_steps += 1
+    if out_of_state_cs_issuer == 'not known':
+      if looked_for_out_of_state_cs_issuer == 'agency':
+        number_of_steps += 1
+    #  if no_jurisdiction or may_have_jurisdiction or has_jurisdiction:
+      #  number_of_steps += 1
 ---
 id: Actually goes into first screen
 question: |
@@ -349,6 +349,7 @@ attachments:
     filename: ChangingForeignCSOrder
     variable name: ChangingForeignCSOrder_attachment[i]
     skip undefined: True
-    docx template file: ChangingForeignCSOrder.docx
+    #  docx template file: ChangingForeignCSOrder.docx
+    docx template file: ChangingForeignCSOrder2022-10-17.docx
 
 
