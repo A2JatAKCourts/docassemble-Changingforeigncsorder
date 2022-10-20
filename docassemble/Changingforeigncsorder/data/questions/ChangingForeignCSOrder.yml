@@ -193,17 +193,21 @@ fields:
 ---
 id: Jurisdiction
 question: |
-  Does the other parent or the child still live in the other state?
-subquestion: |
-  Who still lives in the other state?
+  Does your child or their other parent still live in the other state?
+#  subquestion: |
+#  Who still lives in the other state?
 fields:
-  - "Who still lives out of state?:": out_of_state_resident
+  - label: |
+      Who still lives in the other state?
+  #  - "Who still lives out of state?:": 
+    field: out_of_state_resident
     input type: radio
     choices: 
       - "My child": child
       - "My child's other parent": parent
       - "My child and their other parent": both
-      - "No one lives out of state.": none
+      - "No one still lives in the other of state.": none
+    label above field: True
   - "Has your child lived here in Alaska for at least 6 months?": child_resident
     datatype: yesnoradio   
     js show if:
@@ -213,13 +217,13 @@ code: |
   if out_of_state_resident in('parent','none'):
     if child_resident == 'Yes':
       has_jurisdiction = True
-      jurisdiction = 'yes'
+      jurisdiction =  True
     else:
       may_have_jurisdiction = True
       jurisdiction = 'null'
   if out_of_state_resident in('child','both'):
     no_jurisdiction = True
-    jurisdiction = 'no'
+    jurisdiction = False
 ---
 code: |
   number_of_steps = 0
@@ -231,8 +235,8 @@ code: |
     if out_of_state_cs_issuer == 'not known':
       if looked_for_out_of_state_cs_issuer == 'agency':
         number_of_steps += 1
-    #  if no_jurisdiction or may_have_jurisdiction or has_jurisdiction:
-      #  number_of_steps += 1
+    if no_jurisdiction or may_have_jurisdiction or has_jurisdiction:
+      number_of_steps += 1
 ---
 id: Actually goes into first screen
 question: |
@@ -350,6 +354,6 @@ attachments:
     variable name: ChangingForeignCSOrder_attachment[i]
     skip undefined: True
     #  docx template file: ChangingForeignCSOrder.docx
-    docx template file: ChangingForeignCSOrder2022-10-17.docx
+    docx template file: ChangingForeignCSOrder2022-10-17_divided_table.docx
 
 

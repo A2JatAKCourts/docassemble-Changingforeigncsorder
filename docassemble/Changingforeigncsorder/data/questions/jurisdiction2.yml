@@ -1,0 +1,61 @@
+---
+id: Jurisdiction
+question: |
+  Does your child or their other parent still live in the other state?
+#  subquestion: |
+#  Who still lives in the other state?
+fields:
+  - label: |
+      Who still lives in the other state?
+  #  - "Who still lives out of state?:": 
+    field: out_of_state_resident
+    input type: radio
+    choices: 
+      - "My child": child
+      - "My child's other parent": parent
+      - "My child and their other parent": both
+      - "No one still lives in the other of state.": none
+    label above field: True
+  - "Has your child lived here in Alaska for at least 6 months?": child_resident
+    datatype: yesnoradio   
+    js show if:
+       val('out_of_state_resident') == 'parent' || val('out_of_state_resident') == 'none'
+#    - "Testing yesnomaybe radio button values": test
+#      datatype: yesnomaybe
+---
+#  code: |   
+#    if out_of_state_resident in('parent','none'):   
+#      if child_resident :      
+#        jurisdiction =  True   
+#      else:     
+#        jurisdiction = 'none'   
+#    else:    
+#      jurisdiction = False
+#  ---
+#  question: |
+#    Does yesnomaybe variable work? 
+#  subquestion: |
+#    Out of state resident = ${out_of_state_resident}
+#    
+#    %if jurisdiction:
+#    AK has jurisdiction
+#    % elif jurisdiction == 'none':
+#    AK may have jurisdiction
+#    % else:
+#    AK does not have jurisdiction
+#    % endif
+#    
+#    ${test}
+---
+mandatory: true
+event: test
+question: |
+  Get the test docx template as a pdf.
+attachment:
+  name: testing number of steps in table
+  filename: NumberOfStepsTest
+  docx template file: number_of_steps_table1.docx
+  #  skip undefined: True
+  valid formats:
+    - pdf
+    - docx
